@@ -1,0 +1,244 @@
+---
+title: Stray Animals Shelter Management System — ER Diagram (1NF)
+---
+%%{init: {'theme':'forest'}}%%
+erDiagram
+
+    branch {
+        int branch_id PK
+        varchar branch_name
+        varchar city_name
+        varchar province
+        varchar country
+        varchar address
+        varchar phone
+        varchar email
+        int capacity
+        date opened_date
+        boolean is_active
+    }
+
+    employee {
+        int employee_id PK
+        varchar first_name
+        varchar last_name
+        char cnic
+        varchar email
+        varchar phone
+        date hire_date
+        int branch_id FK
+        varchar branch_name
+        varchar role_name
+        numeric base_salary
+        text permissions
+        numeric salary
+        boolean is_active
+    }
+
+    employee_shift {
+        int shift_id PK
+        int employee_id FK
+        varchar employee_name
+        date shift_date
+        time start_time
+        time end_time
+        numeric hours_worked
+    }
+
+    rescue_team {
+        int team_id PK
+        varchar team_name
+        int branch_id FK
+        varchar branch_name
+        int leader_id FK
+        varchar leader_name
+        varchar vehicle_plate
+        boolean is_active
+    }
+
+    animal {
+        int animal_id PK
+        varchar name
+        varchar species_name
+        int avg_lifespan_years
+        varchar breed
+        char gender
+        date date_of_birth
+        varchar colour
+        numeric weight_kg
+        varchar microchip_no
+        varchar health_status
+        varchar status
+        int branch_id FK
+        varchar branch_name
+        date intake_date
+        varchar intake_method
+    }
+
+    report {
+        int report_id PK
+        varchar channel
+        varchar reporter_name
+        varchar reporter_contact
+        text description
+        varchar location_text
+        varchar city_name
+        varchar province
+        varchar country
+        timestamptz reported_at
+        varchar status
+        int assigned_team_id FK
+        varchar team_name
+    }
+
+    rescue_mission {
+        int mission_id PK
+        int report_id FK
+        int team_id FK
+        varchar team_name
+        int animal_id FK
+        varchar animal_name
+        timestamptz dispatched_at
+        timestamptz completed_at
+        varchar outcome
+        text notes
+    }
+
+    animal_care_log {
+        int log_id PK
+        int animal_id FK
+        varchar animal_name
+        int employee_id FK
+        varchar employee_name
+        date log_date
+        varchar care_type
+        text notes
+        numeric cost
+    }
+
+    adoption {
+        int adoption_id PK
+        int animal_id FK
+        varchar animal_name
+        varchar species_name
+        varchar adopter_name
+        char adopter_cnic
+        varchar adopter_contact
+        text adopter_address
+        int employee_id FK
+        varchar employee_name
+        date adoption_date
+        numeric adoption_fee
+        varchar status
+    }
+
+    animal_sale {
+        int sale_id PK
+        int animal_id FK
+        varchar animal_name
+        varchar sale_type
+        varchar counterparty_name
+        varchar counterparty_contact
+        int employee_id FK
+        varchar employee_name
+        date transaction_date
+        numeric amount
+        text notes
+    }
+
+    medical_record {
+        int record_id PK
+        int animal_id FK
+        varchar animal_name
+        int employee_id FK
+        varchar veterinarian_name
+        date visit_date
+        varchar diagnosis
+        text treatment_plan
+        text medication_prescribed
+        numeric cost
+        date next_visit_date
+    }
+
+    volunteer {
+        int volunteer_id PK
+        varchar first_name
+        varchar last_name
+        char cnic
+        varchar email
+        varchar phone
+        date registration_date
+        int branch_id FK
+        varchar branch_name
+        varchar skills
+        int hours_contributed
+        boolean is_active
+    }
+
+    donation {
+        int donation_id PK
+        varchar donor_name
+        varchar donor_contact
+        varchar donor_email
+        int branch_id FK
+        varchar branch_name
+        date donation_date
+        varchar donation_type
+        numeric amount
+        text items_donated
+        text notes
+    }
+
+    training_session {
+        int session_id PK
+        varchar session_name
+        int branch_id FK
+        varchar branch_name
+        date session_date
+        time start_time
+        time end_time
+        int trainer_id FK
+        varchar trainer_name
+        varchar topic
+        int max_participants
+        text description
+    }
+
+    audit_log {
+        int audit_id PK
+        varchar table_name
+        int record_id
+        varchar action
+        text old_value
+        text new_value
+        varchar changed_by
+        timestamptz changed_at
+    }
+
+    %% Relationships
+
+    branch       ||--o{ employee        : "employs"
+    branch       ||--o{ rescue_team     : "operates"
+    branch       ||--o{ animal          : "shelters"
+    branch       ||--o{ volunteer       : "has"
+    branch       ||--o{ donation        : "receives"
+    branch       ||--o{ training_session : "hosts"
+
+    employee     ||--o{ employee_shift  : "works"
+    employee     ||--o{ animal_care_log : "provides care"
+    employee     ||--o{ adoption        : "processes"
+    employee     ||--o{ animal_sale     : "handles"
+    employee     |o--o{ rescue_team     : "leads"
+    employee     ||--o{ medical_record  : "treats"
+    employee     ||--o{ training_session : "trains"
+
+    rescue_team  ||--o{ rescue_mission  : "conducts"
+    rescue_team  ||--o{ report          : "assigned to"
+
+    animal       ||--o{ animal_care_log : "receives"
+    animal       |o--o| adoption        : "subject of"
+    animal       |o--o| animal_sale     : "involved in"
+    animal       |o--o| rescue_mission  : "rescued by"
+    animal       ||--o{ medical_record  : "has"
+
+    report       |o--o| rescue_mission  : "triggers"

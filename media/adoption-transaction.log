@@ -1,0 +1,39 @@
+Selected Animal ID: 3
+{
+  "animal_id": 3,
+  "name": "Max",
+  "status": "In Shelter"
+}
+
+--- COMMIT: Successful Adoption ---
+{
+  "adoption_id": 14,
+  "animal_id": 3,
+  "adopter_name": "John Smith",
+  "adopter_cnic": "12345-1234567-1",
+  "adopter_contact": "+92-300-1234567",
+  "adopter_address": "123 Main St, Karachi",
+  "employee_id": 1,
+  "adoption_date": "2026-03-15T19:00:00.000Z",
+  "adoption_fee": "5000.00",
+  "status": "Completed"
+}
+
+--- DB: Animal status after adoption ---
+ animal_id | name | status  | adopter_name 
+-----------+------+---------+--------------
+         3 | Max  | Adopted | John Smith
+(1 row)
+
+
+--- ROLLBACK: Adopt same animal again ---
+{
+  "error": "Animal is not available for adoption (current status: Adopted)"
+}
+
+--- DB: Adoption count (should be 1) ---
+ adoption_count 
+----------------
+              1
+(1 row)
+

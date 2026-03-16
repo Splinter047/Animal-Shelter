@@ -1,0 +1,32 @@
+Created Report ID: 27
+
+--- COMMIT: Dispatch mission ---
+{
+  "mission_id": 19,
+  "report_id": 27,
+  "team_id": 1,
+  "animal_id": null,
+  "dispatched_at": "2026-03-16T05:34:06.104Z",
+  "completed_at": null,
+  "outcome": "Ongoing",
+  "notes": null
+}
+
+--- DB: Report and mission after dispatch ---
+ report_id |  status  | assigned_team_id | mission_id | outcome 
+-----------+----------+------------------+------------+---------
+        27 | Assigned |                1 |         19 | Ongoing
+(1 row)
+
+
+--- ROLLBACK: Dispatch with invalid team ---
+{
+  "error": "Team not found"
+}
+
+--- DB: Mission count (should be 1) ---
+ mission_count 
+---------------
+             1
+(1 row)
+

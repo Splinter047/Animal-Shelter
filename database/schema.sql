@@ -71,7 +71,8 @@ CREATE TABLE employee (
     branch_id     INT          NOT NULL REFERENCES branch(branch_id),
     role_id       INT          NOT NULL REFERENCES role(role_id),
     salary        NUMERIC(10,2) NOT NULL CHECK (salary >= 0),
-    is_active     BOOLEAN      NOT NULL DEFAULT TRUE
+    is_active     BOOLEAN      NOT NULL DEFAULT TRUE,
+    password_hash VARCHAR(255)
 );
 
 CREATE TABLE employee_shift (

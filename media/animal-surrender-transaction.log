@@ -1,0 +1,21 @@
+--- COMMIT: Surrender animal ---
+Surrendered Animal ID: 45
+
+--- DB: Animal, sale, and care log records ---
+ animal_id | name  |  intake_method  |     sale_type     | counterparty_name | care_type |                     notes                      
+-----------+-------+-----------------+-------------------+-------------------+-----------+------------------------------------------------
+        45 | Buddy | Owner Surrender | Donation Received | Sara Khan         | Check-up  | Initial assessment upon owner surrender intake
+(1 row)
+
+
+--- ROLLBACK: Surrender with missing fields ---
+{
+  "error": "name, species_id, and branch_id are required"
+}
+
+--- DB: Ghost animal count (should be 0) ---
+ ghost_count 
+-------------
+           0
+(1 row)
+

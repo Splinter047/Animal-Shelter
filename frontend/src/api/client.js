@@ -10,9 +10,13 @@ export class ApiError extends Error {
 
 export async function api(path, { method = 'GET', body, token, signal } = {}) {
   const headers = { Accept: 'application/json' };
-  if (body !== undefined) {
+  
+  const isFormData = body instanceof FormData;
+  
+  if (body !== undefined && !isFormData) {
     headers['Content-Type'] = 'application/json';
   }
+  
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
@@ -22,7 +26,7 @@ export async function api(path, { method = 'GET', body, token, signal } = {}) {
     res = await fetch(`${base}${path}`, {
       method,
       headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: body !== undefined ? (isFormData ? body : JSON.stringify(body)) : undefined,
       signal,
     });
   } catch (e) {

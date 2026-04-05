@@ -205,11 +205,64 @@ export const updateReport = async (req, res) => {
 };
 
 export const updateMission = async (req, res) => {
+  const client = await pool.connect();
   try {
     const { id } = req.params;
-    const { outcome, animal_id, notes, completed_at } = req.body;
+    const { outcome, animal_id, notes, completed_at, animal_data } = req.body;
 
-    const result = await pool.query(
+    await client.query('BEGIN');
+
+    let finalAnimalId = animal_id;
+
+    // If outcome is Rescued and we have animal data, create the animal
+    if (outcome === 'Rescued' && animal_data && !animal_id) {
+      let data = typeof animal_data === 'string' ? JSON.parse(animal_data) : animal_data;
+      
+      const image_url = req.file ? `/uploads/${req.file.filename}` : null;
+
+      // Get branch_id from the mission's team
+      const missionInfo = await client.query(
+        'SELECT team_id FROM rescue_mission WHERE mission_id = $1',
+        [id]
+      );
+      
+      if (missionInfo.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Mission not found' });
+      }
+
+      const teamInfo = await client.query(
+        'SELECT branch_id FROM rescue_team WHERE team_id = $1',
+        [missionInfo.rows[0].team_id]
+      );
+
+      const branch_id = data.branch_id || teamInfo.rows[0].branch_id;
+
+      const animalResult = await client.query(
+        `INSERT INTO animal 
+         (name, species_id, breed, gender, date_of_birth, colour, weight_kg,
+          health_status, status, branch_id, intake_method, image_url)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+         RETURNING animal_id`,
+        [
+          data.name || null,
+          data.species_id,
+          data.breed || null,
+          data.gender || 'U',
+          data.date_of_birth || null,
+          data.colour || null,
+          data.weight_kg || null,
+          data.health_status || 'Injured',
+          'In Shelter',
+          branch_id,
+          'Rescue',
+          image_url
+        ]
+      );
+      finalAnimalId = animalResult.rows[0].animal_id;
+    }
+
+    const result = await client.query(
       `UPDATE rescue_mission
        SET outcome = COALESCE($1, outcome),
            animal_id = COALESCE($2, animal_id),
@@ -217,16 +270,29 @@ export const updateMission = async (req, res) => {
            completed_at = COALESCE($4, completed_at)
        WHERE mission_id = $5
        RETURNING *`,
-      [outcome, animal_id, notes, completed_at, id]
+      [outcome, finalAnimalId, notes, completed_at, id]
     );
 
     if (result.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Mission not found' });
     }
 
+    // Also update the report status to Resolved if mission is Rescued
+    if (outcome === 'Rescued' && result.rows[0].report_id) {
+      await client.query(
+        "UPDATE report SET status = 'Resolved' WHERE report_id = $1",
+        [result.rows[0].report_id]
+      );
+    }
+
+    await client.query('COMMIT');
     res.json(result.rows[0]);
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Update mission error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
   }
 };

@@ -8,6 +8,7 @@ import {
   updateMission,
 } from '../controllers/rescues.js';
 import { authenticate, authorize } from '../middleware/auth.js';
+import { upload } from '../middleware/upload.js';
 
 const router = express.Router();
 
@@ -22,6 +23,6 @@ router.patch(
 
 router.get('/missions', authenticate, authorize('Manager', 'Rescuer'), getMissions);
 router.post('/missions', authenticate, authorize('Manager', 'Rescuer'), createMission);
-router.patch('/missions/:id', authenticate, authorize('Manager', 'Rescuer'), updateMission);
+router.patch('/missions/:id', authenticate, authorize('Manager', 'Rescuer'), upload.single('image'), updateMission);
 
 export default router;

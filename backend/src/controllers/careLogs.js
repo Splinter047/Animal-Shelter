@@ -23,21 +23,34 @@ export const getCareLogs = async (req, res) => {
 };
 
 export const createCareLog = async (req, res) => {
+  const client = await pool.connect();
   try {
     const { animal_id } = req.params;
     const { care_type, notes, cost } = req.body;
 
-    const result = await pool.query(
+    await client.query('BEGIN');
+
+    const result = await client.query(
       `INSERT INTO animal_care_log (animal_id, employee_id, care_type, notes, cost)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
       [animal_id, req.user.employeeId, care_type, notes, cost || 0]
     );
 
+    // Update the animal's last_care_date
+    await client.query(
+      'UPDATE animal SET last_care_date = CURRENT_DATE WHERE animal_id = $1',
+      [animal_id]
+    );
+
+    await client.query('COMMIT');
     res.status(201).json(result.rows[0]);
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Create care log error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
   }
 };
 

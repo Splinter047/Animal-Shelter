@@ -26,6 +26,11 @@ const GENDERS = [
 ];
 const INTAKE = ['Rescue', 'Donation', 'Owner Surrender', 'Other'];
 
+const IMAGE_BASE = import.meta.env.VITE_API_URL 
+  ? import.meta.env.VITE_API_URL.replace('/api/v1', '') 
+  : 'http://localhost:3000';
+
+
 function buildQuery(filters) {
   const q = new URLSearchParams();
   if (filters.status) q.set('status', filters.status);
@@ -65,6 +70,7 @@ export default function Animals() {
     weight_kg: '',
     colour: '',
     date_of_birth: '',
+    image: null,
   });
   const [selected, setSelected] = useState(new Set());
   const [batchStatus, setBatchStatus] = useState('Released');
@@ -156,22 +162,24 @@ export default function Animals() {
     e.preventDefault();
     setError('');
     try {
+      const formData = new FormData();
+      formData.append('name', createForm.name || '');
+      formData.append('species_id', Number(createForm.species_id));
+      formData.append('branch_id', Number(createForm.branch_id));
+      formData.append('breed', createForm.breed || '');
+      formData.append('gender', createForm.gender);
+      formData.append('health_status', createForm.health_status);
+      formData.append('status', createForm.status);
+      formData.append('intake_method', createForm.intake_method);
+      if (createForm.weight_kg) formData.append('weight_kg', Number(createForm.weight_kg));
+      formData.append('colour', createForm.colour || '');
+      if (createForm.date_of_birth) formData.append('date_of_birth', createForm.date_of_birth);
+      if (createForm.image) formData.append('image', createForm.image);
+
       await api('/animals', {
         method: 'POST',
         token,
-        body: {
-          name: createForm.name || null,
-          species_id: Number(createForm.species_id),
-          branch_id: Number(createForm.branch_id),
-          breed: createForm.breed || null,
-          gender: createForm.gender,
-          health_status: createForm.health_status,
-          status: createForm.status,
-          intake_method: createForm.intake_method,
-          weight_kg: createForm.weight_kg ? Number(createForm.weight_kg) : null,
-          colour: createForm.colour || null,
-          date_of_birth: createForm.date_of_birth || null,
-        },
+        body: formData,
       });
       showToast({ type: 'success', message: 'Animal record created.' });
       setShowCreate(false);
@@ -370,6 +378,7 @@ export default function Animals() {
               <tr>
                 {canEditAnimal(user.role) && <th />}
                 <th>ID</th>
+                <th>Photo</th>
                 <th>Name</th>
                 <th>Species</th>
                 <th>Status</th>
@@ -392,6 +401,19 @@ export default function Animals() {
                     </td>
                   )}
                   <td>{a.animal_id}</td>
+                  <td>
+                    {a.image_url ? (
+                      <img 
+                        src={`${IMAGE_BASE}${a.image_url}`} 
+                        alt={a.name} 
+                        style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
+                      />
+                    ) : (
+                      <div style={{ width: '40px', height: '40px', backgroundColor: '#eee', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: '#888' }}>
+                        No Image
+                      </div>
+                    )}
+                  </td>
                   <td>{a.name || '—'}</td>
                   <td>{a.species_name}</td>
                   <td>{a.status}</td>
@@ -543,6 +565,14 @@ export default function Animals() {
                   type="date"
                   value={createForm.date_of_birth}
                   onChange={(e) => setCreateForm((f) => ({ ...f, date_of_birth: e.target.value }))}
+                />
+              </label>
+              <label className="full">
+                Animal Photo
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setCreateForm((f) => ({ ...f, image: e.target.files[0] }))}
                 />
               </label>
               <div className="full modal-actions">

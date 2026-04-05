@@ -5,6 +5,8 @@ import {
   getBranches,
   getRoles,
   getRescueTeams,
+  globalSearch,
+  getAuditLogs,
 } from '../controllers/lookup.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 
@@ -20,5 +22,7 @@ router.get(
   authorize('Manager', 'Rescuer', 'Admin'),
   getRescueTeams
 );
+router.get('/search', authenticate, globalSearch);
+router.get('/audit-logs', authenticate, authorize('Manager'), getAuditLogs);
 
 export default router;

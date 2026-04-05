@@ -10,6 +10,10 @@ import {
   canViewRescueReports,
 } from '../auth/rbac.js';
 
+const IMAGE_BASE = import.meta.env.VITE_API_URL 
+  ? import.meta.env.VITE_API_URL.replace('/api/v1', '') 
+  : 'http://localhost:3000';
+
 export default function Dashboard() {
   const { token, user } = useAuth();
   const { showToast } = useToast();
@@ -24,14 +28,19 @@ export default function Dashboard() {
     try {
       const animals = await api('/animals', { token });
       let adoptionCount = null;
+      let pendingAdoptionsData = [];
       if (canManageAdoptions(user.role)) {
         const adoptions = await api('/adoptions', { token });
         adoptionCount = adoptions.length;
+        pendingAdoptionsData = adoptions.filter(a => a.status === 'Pending' || a.status === 'Approved').slice(0, 3);
       }
       let reportCount = null;
+      let pendingReportsData = [];
       if (canViewRescueReports(user.role)) {
         const reports = await api('/rescues/reports', { token });
-        reportCount = reports.filter((r) => r.status === 'Pending').length;
+        const pending = reports.filter((r) => r.status === 'Pending');
+        reportCount = pending.length;
+        pendingReportsData = pending.slice(0, 3);
       }
       let missionCount = null;
       if (canManageMissions(user.role)) {
@@ -44,12 +53,22 @@ export default function Dashboard() {
         return acc;
       }, {});
 
+      // Identify animals needing care (In Shelter and last_care_date < today)
+      const today = new Date().toISOString().split('T')[0];
+      const pendingCareData = animals
+        .filter(a => a.status === 'In Shelter' && (!a.last_care_date || a.last_care_date < today))
+        .slice(0, 3);
+
       setStats({
         totalAnimals: animals.length,
         inShelter: byStatus['In Shelter'] || 0,
         adopted: byStatus.Adopted || 0,
+        recentAnimals: animals.slice(0, 4),
         adoptionCount,
         pendingReports: reportCount,
+        pendingReportsData,
+        pendingAdoptionsData,
+        pendingCareData,
         ongoingMissions: missionCount,
         updatedAt: new Date().toISOString(),
       });
@@ -124,6 +143,68 @@ export default function Dashboard() {
             )}
           </div>
           <p className="muted small">Last updated: {new Date(stats.updatedAt).toLocaleString()}</p>
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+  {((stats.pendingReportsData && stats.pendingReportsData.length > 0) || 
+    (stats.pendingAdoptionsData && stats.pendingAdoptionsData.length > 0) ||
+    (stats.pendingCareData && stats.pendingCareData.length > 0)) && (
+    <section className="card">
+      <h2>Pending Tasks</h2>
+      <ul className="task-list">
+        {stats.pendingCareData.map(a => (
+          <li key={`care-${a.animal_id}`} className="task-item">
+            <div className="task-info">
+              <span className="task-title">Daily Care: {a.name || `#${a.animal_id}`}</span>
+              <span className="task-meta">No logs recorded today</span>
+            </div>
+            <Link to={`/animals/${a.animal_id}`} className="btn tiny ghost">Log Care</Link>
+          </li>
+        ))}
+        {stats.pendingReportsData.map(r => (
+...
+
+                    <li key={`rep-${r.report_id}`} className="task-item">
+                      <div className="task-info">
+                        <span className="task-title">Unassigned Report #{r.report_id}</span>
+                        <span className="task-meta">{r.location_text}</span>
+                      </div>
+                      <Link to="/rescues" className="btn tiny ghost">View</Link>
+                    </li>
+                  ))}
+                  {stats.pendingAdoptionsData.map(a => (
+                    <li key={`ado-${a.adoption_id}`} className="task-item">
+                      <div className="task-info">
+                        <span className="task-title">Adoption for {a.animal_name}</span>
+                        <span className="task-meta">Status: {a.status}</span>
+                      </div>
+                      <Link to="/adoptions" className="btn tiny ghost">Review</Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {stats.recentAnimals && stats.recentAnimals.length > 0 && (
+              <section className="card">
+                <h2>Recently Added</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '1rem', marginTop: '0.5rem' }}>
+                  {stats.recentAnimals.map(a => (
+                    <Link key={a.animal_id} to={`/animals/${a.animal_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ width: '100%', aspectRatio: '1/1', backgroundColor: '#eee', borderRadius: '8px', overflow: 'hidden', marginBottom: '0.5rem' }}>
+                          {a.image_url ? (
+                            <img src={`${IMAGE_BASE}${a.image_url}`} alt={a.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '10px' }}>No Photo</div>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name || `#${a.animal_id}`}</div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
         </>
       )}
 

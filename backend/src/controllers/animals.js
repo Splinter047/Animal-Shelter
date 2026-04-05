@@ -81,14 +81,16 @@ export const createAnimal = async (req, res) => {
       weight_kg, health_status, status, branch_id, intake_method
     } = req.body;
 
+    const image_url = req.file ? `/uploads/${req.file.filename}` : null;
+
     const result = await pool.query(
       `INSERT INTO animal 
        (name, species_id, breed, gender, date_of_birth, colour, weight_kg,
-        health_status, status, branch_id, intake_method)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        health_status, status, branch_id, intake_method, image_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
       [name, species_id, breed, gender, date_of_birth, colour, weight_kg,
-       health_status || 'Unknown', status || 'In Shelter', branch_id, intake_method]
+       health_status || 'Unknown', status || 'In Shelter', branch_id, intake_method, image_url]
     );
 
     res.status(201).json(result.rows[0]);
@@ -106,6 +108,11 @@ export const updateAnimal = async (req, res) => {
       health_status, status, branch_id
     } = req.body;
 
+    let image_url = undefined;
+    if (req.file) {
+      image_url = `/uploads/${req.file.filename}`;
+    }
+
     const result = await pool.query(
       `UPDATE animal
        SET name = COALESCE($1, name),
@@ -116,11 +123,12 @@ export const updateAnimal = async (req, res) => {
            weight_kg = COALESCE($6, weight_kg),
            health_status = COALESCE($7, health_status),
            status = COALESCE($8, status),
-           branch_id = COALESCE($9, branch_id)
-       WHERE animal_id = $10
+           branch_id = COALESCE($9, branch_id),
+           image_url = COALESCE($10, image_url)
+       WHERE animal_id = $11
        RETURNING *`,
       [name, breed, gender, date_of_birth, colour, weight_kg,
-       health_status, status, branch_id, id]
+       health_status, status, branch_id, image_url, id]
     );
 
     if (result.rows.length === 0) {

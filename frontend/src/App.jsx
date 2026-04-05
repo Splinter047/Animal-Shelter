@@ -11,9 +11,12 @@ import AnimalDetail from './pages/AnimalDetail.jsx';
 import Adoptions from './pages/Adoptions.jsx';
 import Rescues from './pages/Rescues.jsx';
 import PublicReport from './pages/PublicReport.jsx';
+import PublicAnimals from './pages/PublicAnimals.jsx';
+
 import Employees from './pages/Employees.jsx';
 import Surrender from './pages/Surrender.jsx';
 import Analytics from './pages/Analytics.jsx';
+import AuditLogs from './pages/AuditLogs.jsx';
 import NotFound from './pages/NotFound.jsx';
 
 export default function App() {
@@ -25,6 +28,7 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/report-stray" element={<PublicReport />} />
+            <Route path="/adopt" element={<PublicAnimals />} />
 
             <Route element={<LayoutGate />}>
               <Route path="/" element={<Dashboard />} />
@@ -63,6 +67,14 @@ export default function App() {
                 }
               />
               <Route path="/analytics" element={<Analytics />} />
+              <Route
+                path="/audit-logs"
+                element={
+                  <RoleRoute roles={['Manager']}>
+                    <AuditLogs />
+                  </RoleRoute>
+                }
+              />
             </Route>
 
             <Route path="*" element={<NotFound />} />

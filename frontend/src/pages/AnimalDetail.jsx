@@ -15,6 +15,10 @@ const GENDERS = [
   { v: 'U', l: 'Unknown' },
 ];
 
+const IMAGE_BASE = import.meta.env.VITE_API_URL 
+  ? import.meta.env.VITE_API_URL.replace('/api/v1', '') 
+  : 'http://localhost:3000';
+
 export default function AnimalDetail() {
   const { id } = useParams();
   const { token, user } = useAuth();
@@ -47,6 +51,7 @@ export default function AnimalDetail() {
         status: a.status,
         branch_id: a.branch_id,
         date_of_birth: a.date_of_birth || '',
+        image: null,
       });
       setLogs(l);
     } catch (e) {
@@ -61,20 +66,22 @@ export default function AnimalDetail() {
   async function saveAnimal(e) {
     e.preventDefault();
     try {
+      const formData = new FormData();
+      formData.append('name', edit.name || '');
+      formData.append('breed', edit.breed || '');
+      formData.append('gender', edit.gender);
+      formData.append('colour', edit.colour || '');
+      if (edit.weight_kg !== '') formData.append('weight_kg', Number(edit.weight_kg));
+      formData.append('health_status', edit.health_status);
+      formData.append('status', edit.status);
+      if (edit.branch_id) formData.append('branch_id', Number(edit.branch_id));
+      if (edit.date_of_birth) formData.append('date_of_birth', edit.date_of_birth);
+      if (edit.image) formData.append('image', edit.image);
+
       await api(`/animals/${id}`, {
         method: 'PATCH',
         token,
-        body: {
-          name: edit.name || null,
-          breed: edit.breed || null,
-          gender: edit.gender,
-          colour: edit.colour || null,
-          weight_kg: edit.weight_kg === '' ? null : Number(edit.weight_kg),
-          health_status: edit.health_status,
-          status: edit.status,
-          branch_id: edit.branch_id ? Number(edit.branch_id) : null,
-          date_of_birth: edit.date_of_birth || null,
-        },
+        body: formData,
       });
       showToast({ type: 'success', message: 'Animal profile updated.' });
       load();
@@ -148,6 +155,13 @@ export default function AnimalDetail() {
       {animal && (
         <>
           <div className="page-header">
+            {animal.image_url && (
+              <img 
+                src={`${IMAGE_BASE}${animal.image_url}`} 
+                alt={animal.name} 
+                style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '8px', marginBottom: '1rem' }}
+              />
+            )}
             <h1>{animal.name || `Animal #${animal.animal_id}`}</h1>
             <p className="muted">
               {animal.species_name} · {animal.branch_name}, {animal.city_name}
@@ -236,6 +250,14 @@ export default function AnimalDetail() {
                   type="date"
                   value={edit.date_of_birth || ''}
                   onChange={(e) => setEdit({ ...edit, date_of_birth: e.target.value })}
+                />
+              </label>
+              <label className="full">
+                Change Photo
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setEdit({ ...edit, image: e.target.files[0] })}
                 />
               </label>
               <div className="full">

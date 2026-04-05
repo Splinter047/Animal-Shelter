@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { navItemsForRole } from '../auth/rbac.js';
 import ApiHealthBadge from './ApiHealthBadge.jsx';
+import GlobalSearch from './GlobalSearch.jsx';
 
 export default function Layout() {
   const { user, logout } = useAuth();
@@ -20,6 +21,7 @@ export default function Layout() {
           <Link to="/" className="brand" onClick={() => setNavOpen(false)}>
             SAS Shelter
           </Link>
+          <GlobalSearch />
           <button
             type="button"
             className="nav-toggle"

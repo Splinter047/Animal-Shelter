@@ -158,6 +158,12 @@ export default function Register() {
         <p className="muted small">
           Already have an account? <Link to="/login">Sign in</Link>
         </p>
+        <p className="muted small">
+          <Link to="/adopt">Browse animals for adoption</Link> (no login)
+        </p>
+        <p className="muted small">
+          <Link to="/report-stray">Report a stray animal</Link> (no login)
+        </p>
       </div>
     </div>
   );

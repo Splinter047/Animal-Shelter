@@ -66,3 +66,50 @@ export const getRescueTeams = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const globalSearch = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.length < 2) return res.json({ animals: [], employees: [] });
+
+    const searchTerm = `%${q}%`;
+    const animalId = isNaN(q) ? -1 : parseInt(q);
+
+    const animals = await pool.query(
+      `SELECT a.animal_id, a.name, s.species_name as species, a.breed, a.status 
+       FROM animal a 
+       JOIN species s ON a.species_id = s.species_id
+       WHERE a.name ILIKE $1 OR a.breed ILIKE $1 OR a.animal_id = $2
+       LIMIT 5`,
+      [searchTerm, animalId]
+    );
+
+    const employees = await pool.query(
+      `SELECT employee_id, first_name, last_name, email 
+       FROM employee 
+       WHERE first_name ILIKE $1 OR last_name ILIKE $1 OR email ILIKE $1
+       LIMIT 5`,
+      [searchTerm]
+    );
+
+    res.json({
+      animals: animals.rows,
+      employees: employees.rows
+    });
+  } catch (error) {
+    console.error('Global search error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getAuditLogs = async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM audit_log ORDER BY changed_at DESC LIMIT 100'
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Audit logs error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

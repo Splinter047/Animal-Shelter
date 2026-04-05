@@ -14,9 +14,21 @@ export default function Rescues() {
   const [missions, setMissions] = useState([]);
   const [teams, setTeams] = useState([]);
   const [animals, setAnimals] = useState([]);
+  const [species, setSpecies] = useState([]);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [missionForm, setMissionForm] = useState({ report_id: '', team_id: '' });
+  
+  const [showRescuedModal, setShowRescuedModal] = useState(false);
+  const [rescuingMissionId, setRescuingMissionId] = useState(null);
+  const [rescuedAnimalForm, setRescuedAnimalForm] = useState({
+    name: '',
+    species_id: '',
+    breed: '',
+    gender: 'U',
+    health_status: 'Injured',
+    image: null
+  });
 
   async function loadReports() {
     const r = await api('/rescues/reports', { token });
@@ -34,8 +46,12 @@ export default function Rescues() {
   }
 
   async function loadMissionLookups() {
-    const [a] = await Promise.all([api('/animals?status=In%20Shelter', { token })]);
+    const [a, s] = await Promise.all([
+      api('/animals?status=In%20Shelter', { token }),
+      api('/lookup/species', { token })
+    ]);
     setAnimals(a);
+    setSpecies(s);
   }
 
   async function refresh() {
@@ -98,9 +114,50 @@ export default function Rescues() {
     setError('');
     setInfo('');
     try {
-      await api(`/rescues/missions/${id}`, { method: 'PATCH', token, body });
+      const isFormData = body instanceof FormData;
+      await api(`/rescues/missions/${id}`, { 
+        method: 'PATCH', 
+        token, 
+        body 
+      });
       setInfo('Mission updated.');
       loadMissions();
+      loadReports();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  async function submitRescuedAnimal(e) {
+    e.preventDefault();
+    if (!rescuingMissionId) return;
+    
+    try {
+      const formData = new FormData();
+      formData.append('outcome', 'Rescued');
+      formData.append('animal_data', JSON.stringify({
+        name: rescuedAnimalForm.name || null,
+        species_id: Number(rescuedAnimalForm.species_id),
+        breed: rescuedAnimalForm.breed || null,
+        gender: rescuedAnimalForm.gender,
+        health_status: rescuedAnimalForm.health_status,
+      }));
+      if (rescuedAnimalForm.image) {
+        formData.append('image', rescuedAnimalForm.image);
+      }
+      formData.append('completed_at', new Date().toISOString());
+
+      await patchMission(rescuingMissionId, formData);
+      setShowRescuedModal(false);
+      setRescuingMissionId(null);
+      setRescuedAnimalForm({
+        name: '',
+        species_id: '',
+        breed: '',
+        gender: 'U',
+        health_status: 'Injured',
+        image: null
+      });
     } catch (e) {
       setError(e.message);
     }
@@ -248,8 +305,15 @@ export default function Rescues() {
                     <td>
                       <div className="stack tight">
                         <select
-                          defaultValue={m.outcome}
-                          onChange={(e) => patchMission(m.mission_id, { outcome: e.target.value })}
+                          value={m.outcome}
+                          onChange={(e) => {
+                            if (e.target.value === 'Rescued' && !m.animal_id) {
+                              setRescuingMissionId(m.mission_id);
+                              setShowRescuedModal(true);
+                            } else {
+                              patchMission(m.mission_id, { outcome: e.target.value });
+                            }
+                          }}
                         >
                           {OUTCOMES.map((o) => (
                             <option key={o} value={o}>
@@ -280,6 +344,93 @@ export default function Rescues() {
             </table>
           </div>
         </>
+      )}
+
+      {showRescuedModal && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true">
+          <div className="card modal">
+            <h2>Success! Create Animal Record</h2>
+            <p className="muted small">This animal will be added to the database and linked to this mission.</p>
+            <form onSubmit={submitRescuedAnimal} className="stack two-col">
+              <label>
+                Name
+                <input
+                  value={rescuedAnimalForm.name}
+                  onChange={(e) => setRescuedAnimalForm({ ...rescuedAnimalForm, name: e.target.value })}
+                  placeholder="e.g. Buddy (leave empty if unknown)"
+                />
+              </label>
+              <label>
+                Species *
+                <select
+                  value={rescuedAnimalForm.species_id}
+                  onChange={(e) => setRescuedAnimalForm({ ...rescuedAnimalForm, species_id: e.target.value })}
+                  required
+                >
+                  <option value="">Select…</option>
+                  {species.map((s) => (
+                    <option key={s.species_id} value={s.species_id}>
+                      {s.species_name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Breed
+                <input
+                  value={rescuedAnimalForm.breed}
+                  onChange={(e) => setRescuedAnimalForm({ ...rescuedAnimalForm, breed: e.target.value })}
+                />
+              </label>
+              <label>
+                Gender
+                <select
+                  value={rescuedAnimalForm.gender}
+                  onChange={(e) => setRescuedAnimalForm({ ...rescuedAnimalForm, gender: e.target.value })}
+                >
+                  <option value="M">Male</option>
+                  <option value="F">Female</option>
+                  <option value="U">Unknown</option>
+                </select>
+              </label>
+              <label>
+                Health Status
+                <select
+                  value={rescuedAnimalForm.health_status}
+                  onChange={(e) => setRescuedAnimalForm({ ...rescuedAnimalForm, health_status: e.target.value })}
+                >
+                  <option value="Injured">Injured</option>
+                  <option value="Sick">Sick</option>
+                  <option value="Healthy">Healthy</option>
+                  <option value="Unknown">Unknown</option>
+                </select>
+              </label>
+              <label className="full">
+                Photo
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setRescuedAnimalForm({ ...rescuedAnimalForm, image: e.target.files[0] })}
+                />
+              </label>
+              <div className="full modal-actions">
+                <button 
+                  type="button" 
+                  className="btn ghost" 
+                  onClick={() => {
+                    setShowRescuedModal(false);
+                    setRescuingMissionId(null);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn primary">
+                  Save Animal & Complete Mission
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

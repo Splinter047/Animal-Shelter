@@ -14,6 +14,7 @@ export function navItemsForRole(role) {
 
   if (role === 'Manager') {
     items.push({ to: '/employees', label: 'Staff' });
+    items.push({ to: '/audit-logs', label: 'Audit Logs' });
   }
 
   if (['Manager', 'Admin'].includes(role)) {

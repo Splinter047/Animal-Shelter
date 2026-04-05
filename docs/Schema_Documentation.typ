@@ -177,6 +177,8 @@ Animal records.
   [branch_id], [INT], [Foreign key to branch (not null)],
   [intake_date], [DATE], [Intake date (default: today)],
   [intake_method], [VARCHAR(20)], [Intake method (not null)],
+  [image_url], [VARCHAR(255)], [Animal photo URL],
+  [last_care_date], [DATE], [Last care log date],
 )
 
 == report

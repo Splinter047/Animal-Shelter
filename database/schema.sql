@@ -112,7 +112,9 @@ CREATE TABLE animal (
     branch_id     INT          NOT NULL REFERENCES branch(branch_id),
     intake_date   DATE         NOT NULL DEFAULT CURRENT_DATE,
     intake_method VARCHAR(20)  NOT NULL
-                  CHECK (intake_method IN ('Rescue','Donation','Owner Surrender','Other'))
+                  CHECK (intake_method IN ('Rescue','Donation','Owner Surrender','Other')),
+    image_url     VARCHAR(255),
+    last_care_date DATE
 );
 
 CREATE TABLE report (

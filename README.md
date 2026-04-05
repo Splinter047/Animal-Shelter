@@ -103,16 +103,22 @@ flowchart TB
 ## 4. UI Examples
 
 ### Dashboard (Screenshot 1)
+![Dashboard showing shelter statistics and real-time updates](media/Screenshot_1.png)
+
 Shows summary cards with animal counts, pending adoptions, and active rescue missions. Auto-refreshes every 25 seconds. This is the first page users see after login and provides quick status overview.
 
 Required because it demonstrates data aggregation across tables and polling for live updates.
 
 ### Analytics Page (Screenshot 2)
+![Analytics page with charts and CSV export](media/Screenshot_2.png)
+
 Charts showing animal distribution by species and adoption pipeline status. Built with Recharts using live API data. Users can export filtered animals to CSV.
 
 Required because it shows data visualization and export functionality. The analytics help track shelter performance over time.
 
 ### Public Stray Report (Screenshot 3)
+![Public form for reporting stray animals](media/Screenshot_3.png)
+
 Form where anyone can report a stray animal without logging in. Creates a report that staff can later assign to rescue teams.
 
 Required because it demonstrates public endpoints and how the rescue workflow starts. This is a key feature for community engagement.
@@ -566,19 +572,6 @@ Full docs in `swagger.yaml`. Quick reference:
 - Multi-language support
 
 **Performance**: Benchmarks based on 40 animals. Results vary with larger datasets.
-
----
-
-## Screenshots
-
-### Dashboard
-![Dashboard showing shelter statistics and real-time updates](docs/Screenshot_1.png)
-
-### Analytics
-![Analytics page with charts and CSV export](docs/Screenshot_2.png)
-
-### Public Stray Report
-![Public form for reporting stray animals](docs/Screenshot_3.png)
 
 ---
 

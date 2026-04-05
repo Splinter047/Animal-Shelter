@@ -7,6 +7,8 @@ import adoptionsRoutes from './routes/adoptions.js';
 import rescuesRoutes from './routes/rescues.js';
 import careLogsRoutes from './routes/careLogs.js';
 import employeesRoutes from './routes/employees.js';
+import lookupRoutes from './routes/lookup.js';
+import publicRoutes from './routes/public.js';
 import { surrenderAnimal } from './controllers/surrender.js';
 import { authenticate, authorize } from './middleware/auth.js';
 
@@ -19,12 +21,14 @@ app.get('/api/v1/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.use('/api/v1/public', publicRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/animals', animalsRoutes);
 app.use('/api/v1/adoptions', adoptionsRoutes);
 app.use('/api/v1/rescues', rescuesRoutes);
 app.use('/api/v1/animals', careLogsRoutes);
 app.use('/api/v1/employees', employeesRoutes);
+app.use('/api/v1/lookup', lookupRoutes);
 
 app.post('/api/v1/animals/surrender', 
   authenticate, 

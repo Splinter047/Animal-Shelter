@@ -165,6 +165,45 @@ export const createMission = async (req, res) => {
   }
 };
 
+export const updateReport = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, assigned_team_id } = req.body;
+
+    const sets = [];
+    const values = [];
+    let p = 1;
+
+    if (status !== undefined) {
+      sets.push(`status = $${p++}`);
+      values.push(status);
+    }
+    if (assigned_team_id !== undefined) {
+      sets.push(`assigned_team_id = $${p++}`);
+      values.push(assigned_team_id);
+    }
+
+    if (sets.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    values.push(id);
+    const result = await pool.query(
+      `UPDATE report SET ${sets.join(', ')} WHERE report_id = $${p} RETURNING *`,
+      values
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Report not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Update report error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 export const updateMission = async (req, res) => {
   try {
     const { id } = req.params;

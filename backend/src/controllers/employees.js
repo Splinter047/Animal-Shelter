@@ -71,6 +71,9 @@ export const createEmployee = async (req, res) => {
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Email or CNIC already in use' });
+    }
     console.error('Create employee error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }

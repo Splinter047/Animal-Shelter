@@ -1,4 +1,4 @@
--- Stray Animals Shelter Performance:wq
+-- Stray Animals Shelter — index performance demo
 
 DROP INDEX IF EXISTS idx_animal_status;
 DROP INDEX IF EXISTS idx_animal_health;

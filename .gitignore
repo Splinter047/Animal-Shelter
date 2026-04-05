@@ -1,3 +1,6 @@
 backend/node_modules/
 backend/.env
 backend/server.log
+frontend/node_modules/
+frontend/dist/
+frontend/.env

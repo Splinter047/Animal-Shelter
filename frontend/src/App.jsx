@@ -8,6 +8,8 @@ import Register from './pages/Register.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Animals from './pages/Animals.jsx';
 import AnimalDetail from './pages/AnimalDetail.jsx';
+import MedicalRecords from './pages/MedicalRecords.jsx';
+
 import Adoptions from './pages/Adoptions.jsx';
 import Rescues from './pages/Rescues.jsx';
 import PublicReport from './pages/PublicReport.jsx';
@@ -34,6 +36,7 @@ export default function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/animals" element={<Animals />} />
               <Route path="/animals/:id" element={<AnimalDetail />} />
+              <Route path="/animals/:id/medical" element={<MedicalRecords />} />
               <Route
                 path="/adoptions"
                 element={

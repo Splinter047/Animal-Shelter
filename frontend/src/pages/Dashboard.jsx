@@ -47,6 +47,13 @@ export default function Dashboard() {
         const missions = await api('/rescues/missions', { token });
         missionCount = missions.filter((m) => m.outcome === 'Ongoing').length;
       }
+      
+      let upcomingVisits = [];
+      try {
+        upcomingVisits = await api('/medical-records/upcoming/visits', { token });
+      } catch (e) {
+        console.warn('Could not fetch medical visits', e);
+      }
 
       const byStatus = animals.reduce((acc, a) => {
         acc[a.status] = (acc[a.status] || 0) + 1;
@@ -69,6 +76,7 @@ export default function Dashboard() {
         pendingReportsData,
         pendingAdoptionsData,
         pendingCareData,
+        upcomingVisits,
         ongoingMissions: missionCount,
         updatedAt: new Date().toISOString(),
       });
@@ -146,9 +154,10 @@ export default function Dashboard() {
 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
   {((stats.pendingReportsData && stats.pendingReportsData.length > 0) || 
     (stats.pendingAdoptionsData && stats.pendingAdoptionsData.length > 0) ||
-    (stats.pendingCareData && stats.pendingCareData.length > 0)) && (
+    (stats.pendingCareData && stats.pendingCareData.length > 0) ||
+    (stats.upcomingVisits && stats.upcomingVisits.length > 0)) && (
     <section className="card">
-      <h2>Pending Tasks</h2>
+      <h2>Pending Tasks & Schedule</h2>
       <ul className="task-list">
         {stats.pendingCareData.map(a => (
           <li key={`care-${a.animal_id}`} className="task-item">
@@ -159,30 +168,36 @@ export default function Dashboard() {
             <Link to={`/animals/${a.animal_id}`} className="btn tiny ghost">Log Care</Link>
           </li>
         ))}
+        {stats.upcomingVisits.map(v => (
+          <li key={`visit-${v.record_id}`} className="task-item">
+            <div className="task-info">
+              <span className="task-title">Follow-up: {v.animal_name}</span>
+              <span className="task-meta">{new Date(v.next_visit_date).toLocaleDateString()}</span>
+            </div>
+            <Link to={`/animals/${v.animal_id}/medical`} className="btn tiny ghost">View</Link>
+          </li>
+        ))}
         {stats.pendingReportsData.map(r => (
-...
-
-                    <li key={`rep-${r.report_id}`} className="task-item">
-                      <div className="task-info">
-                        <span className="task-title">Unassigned Report #{r.report_id}</span>
-                        <span className="task-meta">{r.location_text}</span>
-                      </div>
-                      <Link to="/rescues" className="btn tiny ghost">View</Link>
-                    </li>
-                  ))}
-                  {stats.pendingAdoptionsData.map(a => (
-                    <li key={`ado-${a.adoption_id}`} className="task-item">
-                      <div className="task-info">
-                        <span className="task-title">Adoption for {a.animal_name}</span>
-                        <span className="task-meta">Status: {a.status}</span>
-                      </div>
-                      <Link to="/adoptions" className="btn tiny ghost">Review</Link>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-
+          <li key={`rep-${r.report_id}`} className="task-item">
+            <div className="task-info">
+              <span className="task-title">Unassigned Report #{r.report_id}</span>
+              <span className="task-meta">{r.location_text}</span>
+            </div>
+            <Link to="/rescues" className="btn tiny ghost">View</Link>
+          </li>
+        ))}
+        {stats.pendingAdoptionsData.map(a => (
+          <li key={`ado-${a.adoption_id}`} className="task-item">
+            <div className="task-info">
+              <span className="task-title">Adoption for {a.animal_name}</span>
+              <span className="task-meta">Status: {a.status}</span>
+            </div>
+            <Link to="/adoptions" className="btn tiny ghost">Review</Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
             {stats.recentAnimals && stats.recentAnimals.length > 0 && (
               <section className="card">
                 <h2>Recently Added</h2>

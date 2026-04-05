@@ -166,6 +166,11 @@ export default function AnimalDetail() {
             <p className="muted">
               {animal.species_name} · {animal.branch_name}, {animal.city_name}
             </p>
+            <div className="btn-row" style={{ marginTop: '1rem' }}>
+              <Link to={`/animals/${id}/medical`} className="btn ghost small">
+                View Medical History
+              </Link>
+            </div>
           </div>
 
           {canEditAnimal(user.role) ? (

@@ -4,9 +4,6 @@
 
 This application supports **stray animal shelter operations** in Pakistan: intake and health records, rescue reporting, adoption processing, staff management, and owner surrender workflows. It is the Advanced Database Management course project: a **PostgreSQL** database, a **Node.js / Express** REST API with JWT auth and role-based access, and a **React (Vite)** single-page frontend.
 
-**Group number:** *[Replace with your group number]*  
-**Team members:** *[Replace with names and roll numbers]*
-
 ---
 
 ## 2. Tech stack
